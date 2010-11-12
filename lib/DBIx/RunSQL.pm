@@ -3,7 +3,7 @@ use strict;
 use DBI;
 
 use vars qw($VERSION);
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 =head1 NAME
 
@@ -46,7 +46,7 @@ be read until exhaustion.  B<not implemented>
 
 This allows to create SQL-as-programs as follows:
 
-  #!/usr/bin/perl -w -MDBIx::RunSQL=run
+  #!/usr/bin/perl -w -MDBIx::RunSQL=create
   create table ...
 
 =item *
@@ -146,8 +146,6 @@ sub parse_command_line {
 
 sub handle_command_line {
     my ($package,$appname,@argv) =  @_;
-    require Getopt::Long; Getopt::Long->import();
-    require Pod::Usage; Pod::Usage->import();
     
     my $opts = $package->parse_command_line(@argv)
         or pod2usage(2);
@@ -211,6 +209,25 @@ looks like this:
 
     =cut
 
+=head2 C<< DBIx::RunSQL->handle_command_line >>
+
+Parses the command line. This is a convenience method, which
+passes the following command line arguments to C<< ->create >>:
+
+  --user
+  --password
+  --dsn
+  --sql
+  --verbose
+
+In addition, it handles the following switches through L<Pod::Usage>:
+
+  --help
+  --man
+
+See also the section PROGRAMMER USAGE for a sample program to set
+up a database from an SQL file.
+
 =head1 NOTES
 
 If you find yourself wanting to write SELECT statements,
@@ -224,5 +241,19 @@ or potentially L<DBIx::SQLHandler>.
 =head1 SEE ALSO
 
 L<ORLite::Migrate>
+
+=cut
+
+=head1 AUTHOR
+
+Max Maischein C<corion@cpan.org>
+
+=head1 COPYRIGHT (c)
+
+Copyright 2009-2010 by Max Maischein C<corion@cpan.org>.
+
+=head1 LICENSE
+
+This module is released under the same terms as Perl itself.
 
 =cut
