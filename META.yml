@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               DBIx-RunSQL
-version:            0.04
+version:            0.05
 abstract:           run SQL to create a database schema
 author:
     - Max Maischein <corion@cpan.org>
@@ -14,6 +14,8 @@ requires:
     DBI:   0
     perl:  5.006
 resources:
+    bugtracker:  http://rt.cpan.org/Public/Dist/Display.html?Name=DBIx-RunSQL
+    license:     http://dev.perl.org/licenses/
     repository:  http://github.com/Corion/dbix--runsql
 no_index:
     directory:
