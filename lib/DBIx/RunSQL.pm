@@ -3,7 +3,7 @@ use strict;
 use DBI;
 
 use vars qw($VERSION);
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 =head1 NAME
 
@@ -21,6 +21,7 @@ DBIx::RunSQL - run SQL to create a database schema
     my $test_dbh = DBIx::RunSQL->create(
         dsn     => 'dbi:SQLite:dbname=:memory:',
         sql     => 'sql/setup.sql',
+        force   => 1,
         verbose => 1,
     );
     
@@ -59,7 +60,19 @@ C<dbh> - a premade database handle to be used instead of C<dsn>
 
 =item *
 
+C<force> - continue even if errors are encountered
+
+=item *
+
 C<verbose> - print each SQL statement as it is run
+
+=item *
+
+C<verbose_handler> - callback to call with each SQL statement instead of C<print>
+
+=item *
+
+C<verbose_fh> - filehandle to write to instead of C<STDOUT>
 
 =back
 
@@ -75,15 +88,65 @@ sub create {
         $dbh = DBI->connect($args{dsn}, $args{user}, $args{password}, {})
             or die "Couldn't connect to DSN '$args{dsn}' : " . DBI->errstr;
     };
+    
+    if (! $args{ verbose_handler }) {
+        $args{ verbose_fh } ||= \*main::STDOUT;
+        $args{ verbose_handler } = sub {
+            print { $args{ verbose_fh } } "$_[0]\n";
+        };
+    };
 
     $self->run_sql_file(
-        sql => $args{sql},
         dbh => $dbh,
-        verbose => $args{verbose}
+        %args,
     );
 
     $dbh
 };
+
+=head2 C<< DBIx::RunSQL->run_sql_file ARGS >>
+
+    my $dbh = DBI->connect(...)
+    
+    for my $file (sort glob '*.sql') {
+        DBIx::RunSQL->run_sql_file(
+            verbose => 1,
+            dbh     => $dbh,
+            sql     => $file,
+        );
+    };
+
+Runs an SQL file on a prepared database handle.
+
+=over 4
+
+=item *
+
+C<dbh> - a premade database handle
+
+=item *
+
+C<sql> - name of the file containing the SQL statements
+
+=item *
+
+C<force> - continue even if errors are encountered
+
+=item *
+
+C<verbose> - print each SQL statement as it is run
+
+=item *
+
+C<verbose_handler> - callback to call with each SQL statement instead of C<print>
+
+=item *
+
+C<verbose_fh> - filehandle to write to instead of C<STDOUT>
+
+=back
+
+=cut
 
 sub run_sql_file {
     my ($class,%args) = @_;
@@ -96,14 +159,23 @@ sub run_sql_file {
         @sql = split /;\n/, <$fh> # potentially this should become C<< $/ = ";\n"; >>
         # and a while loop to handle large SQL files
     };
+    
+    $args{ verbose_handler } ||= sub {
+        if ($args{ verbose }) {
+            $args{ verbose_fh } ||= \*main::STDOUT;
+            print { $args{ verbose_fh } } "--\n$_[0]\n";
+        };
+    };
+    my $status = delete $args{ verbose_handler };
 
     for my $statement (@sql) {
         $statement =~ s/^\s*--.*$//mg;
         next unless $statement =~ /\S/; # skip empty lines
-        print "$statement\n" if $args{verbose};
+        
+        $status->($statement);
         if (! $args{dbh}->do($statement)) {
             $errors++;
-            if ($args{fatal}) {
+            if (!$args{force}) {
                 die "[SQL ERROR]: $statement\n";
             } else {
                 warn "[SQL ERROR]: $statement\n";
@@ -126,6 +198,7 @@ sub parse_command_line {
         'password:s' => \my $password,
         'dsn:s' => \my $dsn,
         'verbose' => \my $verbose,
+        'force|f' => \my $force,
         'sql:s' => \my $sql,
         'help|h' => \my $help,
         'man' => \my $man,
@@ -135,6 +208,7 @@ sub parse_command_line {
         password => $password,
         dsn      => $dsn,
         verbose  => $verbose,
+        force    => $force,
         sql      => $sql,
         help     => $help,
         man      => $man,

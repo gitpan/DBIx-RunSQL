@@ -8,8 +8,9 @@ SYNOPSIS
         use DBIx::RunSQL;
 
         my $test_dbh = DBIx::RunSQL->create(
-            dsn     => 'dbi:SQLite:dbfile=:memory:',
+            dsn     => 'dbi:SQLite:dbname=:memory:',
             sql     => 'sql/setup.sql',
+            force   => 1,
             verbose => 1,
         );
     
@@ -17,7 +18,6 @@ SYNOPSIS
 
 METHODS
   `DBIx::RunSQL->create ARGS'
-
     Creates the database and returns the database handle
 
     *   `sql' - name of the file containing the SQL statements
@@ -37,7 +37,40 @@ METHODS
 
     *   `dbh' - a premade database handle to be used instead of `dsn'
 
+    *   `force' - continue even if errors are encountered
+
     *   `verbose' - print each SQL statement as it is run
+
+    *   `verbose_handler' - callback to call with each SQL statement instead
+        of `print'
+
+    *   `verbose_fh' - filehandle to write to instead of `STDOUT'
+
+  `DBIx::RunSQL->run_sql_file ARGS'
+        my $dbh = DBI->connect(...)
+    
+        for my $file (sort glob '*.sql') {
+            DBIx::RunSQL->run_sql_file(
+                verbose => 1,
+                dbh     => $dbh,
+                sql     => $file,
+            );
+        };
+
+    Runs an SQL file on a prepared database handle.
+
+    *   `dbh' - a premade database handle
+
+    *   `sql' - name of the file containing the SQL statements
+
+    *   `force' - continue even if errors are encountered
+
+    *   `verbose' - print each SQL statement as it is run
+
+    *   `verbose_handler' - callback to call with each SQL statement instead
+        of `print'
+
+    *   `verbose_fh' - filehandle to write to instead of `STDOUT'
 
 PROGRAMMER USAGE
     This module abstracts away the "run these SQL statements to set up your
@@ -87,7 +120,6 @@ PROGRAMMER USAGE
         =cut
 
   `DBIx::RunSQL->handle_command_line'
-
     Parses the command line. This is a convenience method, which passes the
     following command line arguments to `->create':
 
@@ -117,11 +149,23 @@ NOTES
 SEE ALSO
     ORLite::Migrate
 
+REPOSITORY
+    The public repository of this module is
+    http://github.com/Corion/DBIx--RunSQL.
+
+SUPPORT
+    The public support forum of this module is http://perlmonks.org/.
+
+BUG TRACKER
+    Please report bugs in this module via the RT CPAN bug queue at
+    https://rt.cpan.org/Public/Dist/Display.html?Name=DBIx-RunSQL or via
+    mail to dbix-runsql-Bugs@rt.cpan.org.
+
 AUTHOR
     Max Maischein `corion@cpan.org'
 
 COPYRIGHT (c)
-    Copyright 2009-2010 by Max Maischein `corion@cpan.org'.
+    Copyright 2009-2011 by Max Maischein `corion@cpan.org'.
 
 LICENSE
     This module is released under the same terms as Perl itself.
