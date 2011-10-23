@@ -3,7 +3,7 @@ use strict;
 use DBI;
 
 use vars qw($VERSION);
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 =head1 NAME
 
@@ -20,7 +20,7 @@ DBIx::RunSQL - run SQL to create a database schema
 
     my $test_dbh = DBIx::RunSQL->create(
         dsn     => 'dbi:SQLite:dbname=:memory:',
-        sql     => 'sql/setup.sql',
+        sql     => 'sql/create.sql',
         force   => 1,
         verbose => 1,
     );
@@ -38,6 +38,8 @@ Creates the database and returns the database handle
 =item *
 
 C<sql> - name of the file containing the SQL statements
+
+The default is C<sql/create.sql>
 
 If C<sql> is a reference to a glob or a filehandle,
 the SQL will be read from that. B<not implemented>
@@ -277,6 +279,10 @@ looks like this:
     The alternative SQL file to use
     instead of C<sql/create.sql>.
 
+    =item C<--force>
+
+    Don't stop on errors
+
     =item C<--help>
 
     Show this message.
@@ -292,6 +298,7 @@ passes the following command line arguments to C<< ->create >>:
   --password
   --dsn
   --sql
+  --force
   --verbose
 
 In addition, it handles the following switches through L<Pod::Usage>:
