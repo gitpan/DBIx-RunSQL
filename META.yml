@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               DBIx-RunSQL
-version:            0.07
+version:            0.08
 abstract:           run SQL to create a database schema
 author:
     - Max Maischein <corion@cpan.org>
