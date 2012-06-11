@@ -3,7 +3,7 @@ use strict;
 use DBI;
 
 use vars qw($VERSION);
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 =head1 NAME
 
@@ -151,7 +151,7 @@ sub run_sql_file {
         open my $fh, "<", $args{sql}
             or die "Couldn't read '$args{sql}' : $!";
         local $/;
-        @sql = split /;\n/, <$fh> # potentially this should become C<< $/ = ";\n"; >>
+        @sql = split /;\r?\n/, <$fh> # potentially this should become C<< $/ = ";\n"; >>
         # and a while loop to handle large SQL files
     };
     
@@ -161,9 +161,26 @@ sub run_sql_file {
     };
     my $status = delete $args{ verbose_handler };
 
+    # Because we blindly split above on /;\n/
+    # we need to reconstruct multi-line CREATE TRIGGER statements here again
+    my $trigger;
     for my $statement (@sql) {
-        $statement =~ s/^\s*--.*$//mg;
-        next unless $statement =~ /\S/; # skip empty lines
+        # skip "statements" that consist only of comments
+        next unless $statement =~ /^\s*[A-Z][A-Z]/mi;
+        
+        if( $statement =~ /^\s*CREATE\s+TRIGGER\b/i ) {
+            $trigger = $statement;
+            next
+                if( $statement !~ /END$/i );
+            $statement = $trigger;
+            undef $trigger;
+        } elsif( $trigger ) {
+            $trigger .= ";\n$statement";
+            next
+                if( $statement !~ /END$/i );
+            $statement = $trigger;
+            undef $trigger;
+        };
         
         $status->($statement) if $args{verbose};
         if (! $args{dbh}->do($statement)) {
@@ -302,6 +319,28 @@ up a database from an SQL file.
 
 =head1 NOTES
 
+=head2 COMMENT FILTERING
+
+The module tries to keep the SQL as much verbatim as possible. It
+filters all lines that end in semicolons but contain only SQL comments. All
+other comments are passed through to the database with the next statement.
+
+=head2 TRIGGER HANDLING
+
+This module uses a very simplicistic approach to recognize triggers.
+Triggers are problematic because they consist of multiple SQL statements
+and this module does not implement a full SQL parser. An trigger is
+recognized by the following sequence of lines
+
+    CREATE TRIGGER
+        ...
+    END;
+
+If your SQL dialect uses a different syntax, it might still work to put
+the whole trigger on a single line in the input file.
+
+=head2 OTHER APPROACHES
+
 If you find yourself wanting to write SELECT statements,
 consider looking at L<Querylet> instead, which is geared towards that
 and even has an interface for Excel or HTML output.
@@ -328,7 +367,7 @@ L<http://perlmonks.org/>.
 
 Please report bugs in this module via the RT CPAN bug queue at
 L<https://rt.cpan.org/Public/Dist/Display.html?Name=DBIx-RunSQL>
-or via mail to L<dbix-runsql-Bugs@rt.cpan.org>.
+or via mail to L<bug-dbix-runsql@rt.cpan.org>.
 
 =head1 AUTHOR
 
