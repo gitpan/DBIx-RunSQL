@@ -1,5 +1,5 @@
 ---
-abstract: 'run SQL to create a database schema'
+abstract: 'run SQL from a file'
 author:
   - 'Max Maischein <corion@cpan.org>'
 build_requires:
@@ -7,7 +7,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 0
 dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.130880'
+generated_by: 'ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -24,4 +24,4 @@ resources:
   bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=DBIx-RunSQL
   license: http://dev.perl.org/licenses/
   repository: http://github.com/Corion/dbix--runsql
-version: 0.10
+version: 0.11

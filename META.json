@@ -1,10 +1,10 @@
 {
-   "abstract" : "run SQL to create a database schema",
+   "abstract" : "run SQL from a file",
    "author" : [
       "Max Maischein <corion@cpan.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.130880",
+   "generated_by" : "ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "perl_5"
    ],
@@ -49,5 +49,5 @@
          "url" : "http://github.com/Corion/dbix--runsql"
       }
    },
-   "version" : "0.10"
+   "version" : "0.11"
 }

@@ -3,11 +3,11 @@ use strict;
 use DBI;
 
 use vars qw($VERSION);
-$VERSION = '0.10';
+$VERSION = '0.11';
 
 =head1 NAME
 
-DBIx::RunSQL - run SQL to create a database schema
+DBIx::RunSQL - run SQL from a file
 
 =cut
 
@@ -31,7 +31,9 @@ DBIx::RunSQL - run SQL to create a database schema
 
 =head2 C<< DBIx::RunSQL->create ARGS >>
 
-Creates the database and returns the database handle
+=head2 C<< DBIx::RunSQL->run ARGS >>
+
+Runs the SQL commands and returns the database handle
 
 =over 4
 
@@ -51,6 +53,11 @@ This allows to create SQL-as-programs as follows:
 
   #!/usr/bin/perl -w -MDBIx::RunSQL=create
   create table ...
+
+If you want to run SQL statements from a scalar,
+you can simply pass in a reference to a scalar containing the SQL:
+
+    sql => \"update mytable set foo='bar';",
 
 =item *
 
@@ -98,6 +105,7 @@ sub create {
 
     $dbh
 };
+*run= \&create;
 
 =head2 C<< DBIx::RunSQL->run_sql_file ARGS >>
 
@@ -112,6 +120,10 @@ sub create {
     };
 
 Runs an SQL file on a prepared database handle.
+Returns the number of errors encountered.
+
+If the statement returns rows, these are printed
+separated with tabs.
 
 =over 4
 
@@ -183,12 +195,33 @@ sub run_sql_file {
         };
         
         $status->($statement) if $args{verbose};
-        if (! $args{dbh}->do($statement)) {
-            $errors++;
+
+        my $sth = $args{dbh}->prepare($statement);
+        if(! $sth) {
             if (!$args{force}) {
                 die "[SQL ERROR]: $statement\n";
             } else {
                 warn "[SQL ERROR]: $statement\n";
+            };
+        } else {
+            my $status= $sth->execute();
+            if(! $status) {
+                if (!$args{force}) {
+                    die "[SQL ERROR]: $statement\n";
+                } else {
+                    warn "[SQL ERROR]: $statement\n";
+                };
+            } elsif( 0 < $sth->{NUM_OF_FIELDS} ) {
+                # SELECT statement, output results
+                my @columns= @{ $sth->{NAME} };
+
+                my $res= $sth->fetchall_arrayref( {} );
+                if( @columns ) {
+                    print join( "\t", @columns )."\n";
+                    for( @$res ) {
+                        print join( "\t", @{$_}{ @columns } )."\n";
+                    };
+                };
             };
         };
     };
@@ -375,7 +408,7 @@ Max Maischein C<corion@cpan.org>
 
 =head1 COPYRIGHT (c)
 
-Copyright 2009-2011 by Max Maischein C<corion@cpan.org>.
+Copyright 2009-2013 by Max Maischein C<corion@cpan.org>.
 
 =head1 LICENSE
 
